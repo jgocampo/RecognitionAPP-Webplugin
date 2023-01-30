@@ -1,9 +1,60 @@
 html, body {
   height: 100%;
+  font-family: 'Segoe UI';
 }
 
 #sidebar {
   height: 100%;
   min-height: 100vh;
   min-width: 180px;
+}
+
+
+.footer {
+  position: fixed;
+  left: 0;
+  bottom: 60px;
+  width: 100%;
+  text-align: center;
+}
+
+
+.parent {
+  display: grid;
+  place-items: center;
+}
+
+.color-prometeo {
+  color: #128C7E;
+}
+
+.h1, h2, h3, h4, p {
+  color: #39393B;
+}
+
+.button-prometeo {
+  border-color: #128C7E;
+  border-radius: 40px;
+}
+
+.border-prometeo {
+  border-color: #128C7E;
+}
+
+video {
+  border-color: #128C7E;
+  border-radius: 10px;
+}
+
+
+.modalClass .modal-content {
+  border: none;
+  background: none;
+}
+.modalClass .spinner-border {
+  width: 5rem !important;
+  height: 5rem !important;
+  border-width: 0.5rem;
+  border-color: white;
+  border-right-color: transparent;
 }
