@@ -41,8 +41,9 @@ export class CameraComponent implements OnInit {
   autohide = true;
 
   selfieBase64: string = '';
-  uuidPerson: string = ''
-  messageSerivce: string = ''
+  uuidPerson: string = '';
+  messageSerivce: string = '';
+  resultSpoof: string = '';
 
   constructor( private recongnitionsService: RecongnitionsService,
     private router: Router,
@@ -114,8 +115,8 @@ export class CameraComponent implements OnInit {
     // console.log(request);
     this.recongnitionsService.campare_spoof(request)
       .subscribe( spoof => {
-        console.log('compareSpoof');
         console.log(spoof);
+        this.resultSpoof = spoof.class_name;
         if (spoof.class_name == 'Real' ){
           console.log('real')
           this.compareFace(imgBase64);
@@ -182,7 +183,7 @@ export class CameraComponent implements OnInit {
 
   public saveBD() {
     const date = new Date();
-    const request = new SaveBDRequest(localStorage.getItem('PersonID')?.toString(), this.uuidPerson, localStorage.getItem('codigoDactilar')?.toString(), 'result', this.selfieBase64, date.toISOString());
+    const request = new SaveBDRequest(localStorage.getItem('PersonID')?.toString(), this.uuidPerson, localStorage.getItem('codigoDactilar')?.toString(), this.resultSpoof, this.selfieBase64, date.toISOString());
     console.log(request);
     this.recongnitionsService.save_bd(request)
       .subscribe( saveBD => {
