@@ -32,7 +32,7 @@ export class IdentificationComponent implements OnInit {
 
   ngOnInit(): void {
     const date = new Date();
-    console.log(date.toLocaleString());
+    console.log(date.toISOString());
     this.userForm.reset({
       identification: '0704437003', // 0704437003
       fingersCode: 'V1234V1234'

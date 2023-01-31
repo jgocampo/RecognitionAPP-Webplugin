@@ -182,7 +182,7 @@ export class CameraComponent implements OnInit {
 
   public saveBD() {
     const date = new Date();
-    const request = new SaveBDRequest(localStorage.getItem('PersonID')?.toString(), this.uuidPerson, localStorage.getItem('codigoDactilar')?.toString(), 'result', this.selfieBase64, date.toLocaleString());
+    const request = new SaveBDRequest(localStorage.getItem('PersonID')?.toString(), this.uuidPerson, localStorage.getItem('codigoDactilar')?.toString(), 'result', this.selfieBase64, date.toISOString());
     console.log(request);
     this.recongnitionsService.save_bd(request)
       .subscribe( saveBD => {
