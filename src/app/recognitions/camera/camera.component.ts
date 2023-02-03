@@ -112,7 +112,7 @@ export class CameraComponent implements OnInit {
     this.selfieBase64 = imgBase64;
     // Consumir servicio de comparar spoof
     const request = new SpoofRequest(imgBase64);
-    // console.log(request);
+    console.log(request);
     this.recongnitionsService.campare_spoof(request)
       .subscribe( spoof => {
         console.log(spoof);

@@ -19,8 +19,7 @@ export class IdentificationComponent implements OnInit {
   validedUser: IdentificationResponse | undefined;
 
   userForm: FormGroup = this.fb.group({
-    identification: [, [Validators.required, Validators.minLength(10), Validators.maxLength(10) ] ],
-    fingersCode: [, [ Validators.required, Validators.minLength(3) ]]
+    identification: [, [Validators.required, Validators.minLength(10), Validators.maxLength(10) ] ]
   })
 
   constructor(
@@ -35,7 +34,6 @@ export class IdentificationComponent implements OnInit {
     console.log(date.toISOString());
     this.userForm.reset({
       identification: '0704437003', // 0704437003
-      fingersCode: 'V1234V1234'
     })
   }
 
@@ -50,8 +48,6 @@ export class IdentificationComponent implements OnInit {
     this.openVerticallyCentered(content);
     const identification_value = this.userForm.value['identification'];
 
-    const fingersCode_value = this.userForm.value['fingersCode'];
-
     const request = new IdentificationRequest(this.userForm.value['identification']);
 
     this.recongnitionsService.check_user(request)
@@ -59,7 +55,6 @@ export class IdentificationComponent implements OnInit {
         console.log(userChecked);
         localStorage.setItem('checkUserImage', userChecked.idImage);
         localStorage.setItem('PersonID', identification_value);
-        localStorage.setItem('codigoDactilar', fingersCode_value);
         this.validedUser = userChecked;
         if (this.validedUser.client ){
           this.router.navigate(['/camera']);

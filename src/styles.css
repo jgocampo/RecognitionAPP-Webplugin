@@ -58,3 +58,7 @@ video {
   border-color: white;
   border-right-color: transparent;
 }
+
+.card-footer {
+  background-color: white;
+}
