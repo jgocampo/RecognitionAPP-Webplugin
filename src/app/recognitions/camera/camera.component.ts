@@ -247,7 +247,7 @@ export class CameraComponent implements OnInit {
           if (completed)
             this.router.navigate(['/check_successful']);
           else
-            if ((this.triesValue + 1) == 10)
+            if ((this.triesValue + 1) == 3)
               this.router.navigate(['/check_failed']);
             else
               this.router.navigate(['/check_again']);

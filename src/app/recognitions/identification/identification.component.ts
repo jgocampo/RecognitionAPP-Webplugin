@@ -60,7 +60,7 @@ export class IdentificationComponent implements OnInit {
           if (this.validedUser.esCliente ){
             localStorage.setItem('UserInfo', JSON.stringify(this.validedUser));
             localStorage.setItem('PersonID', identification_value);
-            if (this.validedUser.intentos == '10')
+            if (this.validedUser.intentos == '3')
               this.router.navigate(['/check_failed']);
             else
               this.router.navigate(['/camera']);
