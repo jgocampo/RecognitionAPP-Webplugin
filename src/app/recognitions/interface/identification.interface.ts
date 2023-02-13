@@ -1,12 +1,16 @@
 export class IdentificationRequest {
   constructor(
-    public id?: string
+    public identificacion?: string
   ){}
 }
 
 export interface IdentificationResponse {
-  msg:     string;
-  code:    number;
-  client:  boolean;
-  idImage: string;
+  esCliente:         boolean;
+  fotoRegistroCivil: string;
+  error:             boolean;
+  statusCode:        number;
+  msg:               string;
+  operationID:       string;
+  intentos:          string;
+  codigoDactilar:    string;
 }

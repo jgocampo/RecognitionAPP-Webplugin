@@ -1,6 +1,5 @@
-import { Component, OnInit, EventEmitter } from '@angular/core';
+import { Component, OnInit, EventEmitter, Output } from '@angular/core';
 import { Observable, Subject } from 'rxjs';
-import {v4 as uuidv4} from 'uuid';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 
 import { Router } from '@angular/router';
@@ -8,7 +7,8 @@ import { Router } from '@angular/router';
 import { WebcamImage, WebcamInitError, WebcamUtil } from 'ngx-webcam';
 import { RecongnitionsService } from '../services/recongnitions.service';
 import { CompareFaceRequst, FaceComparison } from '../interface/face.interface';
-import { SaveBDRequest, SaveS3Request, SpoofRequest } from '../interface/person.interface';
+import { SaveBDRequest, SaveS3Request, SpoofRequest, UpdateStateRequest } from '../interface/person.interface';
+import { IdentificationResponse } from '../interface/identification.interface';
 
 @Component({
   selector: 'app-camera',
@@ -18,6 +18,7 @@ import { SaveBDRequest, SaveS3Request, SpoofRequest } from '../interface/person.
 })
 export class CameraComponent implements OnInit {
 
+  @Output()
   public pictureTaken = new EventEmitter<WebcamImage>();
 
   // toggle webcam on/off
@@ -41,9 +42,16 @@ export class CameraComponent implements OnInit {
   autohide = true;
 
   selfieBase64: string = '';
-  uuidPerson: string = '';
   messageSerivce: string = '';
   resultSpoof: string = '';
+
+  userModel!: IdentificationResponse;
+  triesValue: number = 0;
+  confidence: number = 0;
+
+  picture: string = '';
+  webCamView:  boolean = true;
+  pictureView: boolean = false;
 
   constructor( private recongnitionsService: RecongnitionsService,
     private router: Router,
@@ -51,7 +59,8 @@ export class CameraComponent implements OnInit {
   ) { }
 
   ngOnInit() {
-    this.uuidPerson = uuidv4()
+    this.userModel = JSON.parse(localStorage.getItem('UserInfo')!);
+    this.triesValue = Number(this.userModel.intentos);
     WebcamUtil.getAvailableVideoInputs()
       .then((mediaDevices: MediaDeviceInfo[]) => {
         this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
@@ -90,12 +99,14 @@ export class CameraComponent implements OnInit {
   public handleImage(webcamImage: WebcamImage): void {
     // console.info('received webcam image', webcamImage);
     const newImgBas64 = webcamImage.imageAsDataUrl.replace('data:image/jpeg;base64,', '')
+    this.picture = webcamImage.imageAsDataUrl;
+    this.webCamView = false;
+    this.pictureView = true;
     this.pictureTaken.emit(webcamImage);
     this.compareSpoof(newImgBas64);
   }
 
   public cameraWasSwitched(deviceId: string): void {
-    // console.log('active device: ' + deviceId);
     this.deviceId = deviceId;
   }
 
@@ -107,95 +118,146 @@ export class CameraComponent implements OnInit {
     return this.nextWebcam.asObservable();
   }
 
-
   public compareSpoof (imgBase64: string){
+    console.log('compareSpoof');
     this.selfieBase64 = imgBase64;
     // Consumir servicio de comparar spoof
     const request = new SpoofRequest(imgBase64);
     console.log(request);
     this.recongnitionsService.campare_spoof(request)
-      .subscribe( spoof => {
-        console.log(spoof);
-        this.resultSpoof = spoof.class_name;
-        if (spoof.class_name == 'Real' ){
-          console.log('real')
-          this.compareFace(imgBase64);
+      .subscribe({
+        next: (spoof) => {
+          console.log(spoof);
+          this.resultSpoof = spoof.class_name;
+          if (spoof.class_name.toUpperCase() == 'REAL' ){
+            console.log('real');
+            this.compareFace(imgBase64);
+          }
+          else {
+            console.log('spoof');
+            this.updateState(false);
+          }
+        },
+        error: (e) => {
+          console.log(e);
+          this.updateState(false);
         }
-        else {
-          console.log('spoof');
-          this.modalService.dismissAll();
-          this.router.navigate(['/check_again']);
-        }
-      },
-        (err) => {
-          console.log(err);
-          this.modalService.dismissAll();
-          this.router.navigate(['/check_again']);
-        }
-      );
+      });
   }
 
   public compareFace(imgBase64: string){
+    console.log('compareFace');
     this.selfieBase64 = imgBase64;
     // Consumir servicio de comparar rosotros
-    const request = new CompareFaceRequst(localStorage.getItem('checkUserImage')?.toString(), imgBase64);
-    // console.log(request);
+    const request = new CompareFaceRequst(
+      this.userModel.fotoRegistroCivil,
+      imgBase64
+    );
+    console.log(request);
     this.recongnitionsService.compare_faces(request)
-      .subscribe( compare => {
-        console.log(compare);
-        if (compare.faceComparison.match ){
-          this.saveS3();
+      .subscribe({
+        next: (compare) => {
+          console.log(compare);
+          if (compare.faceComparison.match ){
+            this.confidence = compare.faceComparison.confidence;
+            // this.saveS3();
+          }
+          else {
+            this.updateState(false);
+          }
+        },
+        error: (e) => {
+          console.log(e);
+          this.updateState(false);
         }
-        else {
-          this.modalService.dismissAll();
-          this.router.navigate(['/check_again']);
-        }
-      },
-        (err) => {
-          console.log(err);
-          this.modalService.dismissAll();
-          this.router.navigate(['/check_again']);
-        }
-      );
+      });
   }
 
   public saveS3() {
-    const request = new SaveS3Request(this.selfieBase64, localStorage.getItem('PersonID')?.toString(), this.uuidPerson);
+    console.log('saveS3');
+    const request = new SaveS3Request(
+      this.selfieBase64,
+      localStorage.getItem('PersonID')?.toString(),
+      this.userModel.operationID + ' - ' + (this.triesValue + 1).toString()
+    );
     console.log(request);
     this.recongnitionsService.save_s3(request)
-      .subscribe( saveS3 => {
-        console.log(saveS3);
-        if (saveS3.message == 'Image uploaded successfully' ){
-          this.saveBD();
-        }
-        else {
-          this.modalService.dismissAll();
+      .subscribe({
+        next: (saveS3) => {
+          console.log(saveS3);
+          if (saveS3.message == 'Image uploaded successfully' ){
+            this.updateState(true);
+          }
+          else {
+            this.updateState(false);
+          }
+        },
+        error: (e) => {
+          console.log(e);
           this.router.navigate(['/check_again']);
         }
-      },
-        (err) => {
-          console.log(err);
-          this.modalService.dismissAll();
-          this.router.navigate(['/check_again']);
-        }
-      );
+      });
   }
 
   public saveBD() {
+    console.log('saveBD');
     const date = new Date();
-    const request = new SaveBDRequest(localStorage.getItem('PersonID')?.toString(), this.uuidPerson, localStorage.getItem('codigoDactilar')?.toString(), this.resultSpoof, this.selfieBase64, date.toISOString());
+    const request = new SaveBDRequest(
+      localStorage.getItem('PersonID')?.toString(),
+      '',
+      localStorage.getItem('codigoDactilar')?.toString(),
+      this.resultSpoof,
+      this.selfieBase64,
+      date.toISOString()
+    );
     console.log(request);
     this.recongnitionsService.save_bd(request)
-      .subscribe( saveBD => {
-        console.log(saveBD);
-      },
-        (err) => {
-          console.log(err);
+      .subscribe({
+        next: saveBD => {
+          console.log(saveBD);
+        },
+        error: (e) => {
+          console.log(e);
           this.modalService.dismissAll();
           this.router.navigate(['/check_again']);
         }
-      );
+      });
   }
 
+  public updateState(completed: boolean) {
+    console.log('updateState');
+    const date = new Date();
+    const request = new UpdateStateRequest(
+      localStorage.getItem('PersonID')?.toString(),
+      this.userModel.operationID,
+      this.userModel.codigoDactilar,
+      date.toISOString(),
+      this.resultSpoof,
+      this.selfieBase64,
+      this.confidence.toString(),
+      (this.triesValue + 1).toString(),
+      completed
+    );
+    console.log(request);
+    this.recongnitionsService.update_state(request)
+      .subscribe({
+        next: saveBD => {
+          console.log(saveBD);
+          this.modalService.dismissAll();
+          if (completed)
+            this.router.navigate(['/check_successful']);
+          else
+            if ((this.triesValue + 1) == 10)
+              this.router.navigate(['/check_failed']);
+            else
+              this.router.navigate(['/check_again']);
+        },
+        error: (e) => {
+          console.log(e);
+          this.modalService.dismissAll();
+          this.router.navigate(['/check_again']);
+        }
+      });
+  }
 
 }

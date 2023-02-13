@@ -17,14 +17,13 @@ export class SaveS3Request {
   constructor(
     public image_base64?: string,
     public id?: string,
-    public uuid?: string,
+    public operationID?: string,
   ){}
 }
 
 export interface SaveS3Response {
   message: string;
 }
-
 
 export class SpoofRequest {
   constructor(
@@ -39,4 +38,18 @@ export interface SpoofResponse {
   y2:         number;
   score:      number;
   class_name: string;
+}
+
+export class UpdateStateRequest {
+  constructor(
+    public PersonID?:       string,
+    public OperationID?:    string,
+    public codigoDactilar?: string,
+    public date?:           string,
+    public result?:         string,
+    public selfie?:         string,
+    public confidence?:     string,
+    public tries?:          string,
+    public completed?:      boolean,
+  ){}
 }

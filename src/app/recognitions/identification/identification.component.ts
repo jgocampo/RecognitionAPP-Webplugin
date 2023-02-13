@@ -18,6 +18,8 @@ export class IdentificationComponent implements OnInit {
 
   validedUser: IdentificationResponse | undefined;
 
+  msgCliente: string = '';
+
   userForm: FormGroup = this.fb.group({
     identification: [, [Validators.required, Validators.minLength(10), Validators.maxLength(10) ] ]
   })
@@ -51,16 +53,25 @@ export class IdentificationComponent implements OnInit {
     const request = new IdentificationRequest(this.userForm.value['identification']);
 
     this.recongnitionsService.check_user(request)
-      .subscribe( userChecked => {
-        console.log(userChecked);
-        localStorage.setItem('checkUserImage', userChecked.idImage);
-        localStorage.setItem('PersonID', identification_value);
-        this.validedUser = userChecked;
-        if (this.validedUser.client ){
-          this.router.navigate(['/camera']);
-        }
-        else {
-          console.log('no cliente');
+      .subscribe({
+        next: (userChecked) => {
+          console.log(userChecked);
+          this.validedUser = userChecked;
+          if (this.validedUser.esCliente ){
+            localStorage.setItem('UserInfo', JSON.stringify(this.validedUser));
+            localStorage.setItem('PersonID', identification_value);
+            if (this.validedUser.intentos == '10')
+              this.router.navigate(['/check_failed']);
+            else
+              this.router.navigate(['/camera']);
+          }
+          else {
+            this.msgCliente = userChecked.msg;
+            this.show = true;
+          }
+        },
+        error: (e) => {
+          this.msgCliente = 'Lo sentimos al consultar el servicio, intentelo mas tarde.';
           this.show = true;
         }
       });

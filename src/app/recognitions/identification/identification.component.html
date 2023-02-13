@@ -48,21 +48,12 @@
   <div class="card-footer">
     Powered by <b class="color-prometeo"> Prometeo Labs </b>
   </div>
-  <!-- <div class="h-100 d-inline-block"></div>
-  <div class="card-footer text-center bg-transparent border-success">
-    Powered by <b> Prometeo Labs </b>
-  </div> -->
-
 </div>
-
-<!-- <div class="footer card-footer text-center bg-transparent border-success">
-  Powered by <b> Prometeo Labs </b>
-</div> -->
 
 <div class="toast-container position-fixed bottom-0 end-0 p-3">
   <ngb-toast
     *ngIf="show"
-    header="Notificaciones"
+    header=""
     [delay]="5000"
     [autohide]="autohide"
     (mouseenter)="autohide = false"
@@ -70,7 +61,7 @@
     (hide)="show = false; autohide = true"
     [class.bg-warning]="!autohide"
   >
-    <div *ngIf="autohide">No es cliente</div>
+    <div *ngIf="autohide">{{ msgCliente }}</div>
     <div *ngIf="!autohide">.</div>
   </ngb-toast>
 </div>

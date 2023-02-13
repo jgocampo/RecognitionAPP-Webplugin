@@ -4,7 +4,7 @@ import { Observable, throwError } from 'rxjs';
 import { map, catchError} from 'rxjs/operators';
 import { IdentificationRequest, IdentificationResponse } from '../interface/identification.interface';
 import { CompareFaceRequst, CompareFaceResponse } from '../interface/face.interface';
-import { SaveBDRequest, SaveBDResponse, SaveS3Request, SaveS3Response, SpoofRequest, SpoofResponse } from '../interface/person.interface';
+import { SaveBDRequest, SaveBDResponse, SaveS3Request, SaveS3Response, SpoofRequest, SpoofResponse, UpdateStateRequest } from '../interface/person.interface';
 import { Helper } from '../../config/config';
 
 @Injectable({
@@ -14,60 +14,53 @@ export class RecongnitionsService {
 
   public resultados!: IdentificationResponse;
 
-  private baseUrl: string = 'https://8zj2l9ycrg.execute-api.us-east-1.amazonaws.com/prometeo/recognition'
-  private baseUrlSpoof: string = 'https://uhbby2jtxl.execute-api.us-east-1.amazonaws.com'
+  private baseUrl: string = 'https://8zj2l9ycrg.execute-api.us-east-1.amazonaws.com/prometeo/recognition';
+  private baseUrlSpoof: string = 'https://uhbby2jtxl.execute-api.us-east-1.amazonaws.com';
+  private baseUrlSaveS3: string = 'https://skbilp645i.execute-api.us-east-1.amazonaws.com/s3-image';
+  private baseUrlSaveBd: string = 'https://fhi7bo984d.execute-api.us-east-1.amazonaws.com/items';
+  private baseUrlUpdateState: string = 'https://fhi7bo984d.execute-api.us-east-1.amazonaws.com/prometeo/recognition/actualizar_estado_operacion';
 
   constructor( private http: HttpClient) { }
 
   check_user(identificationRequest: IdentificationRequest): Observable<IdentificationResponse> {
 
-    const url = `${ this.baseUrl }/check_user`;
-    // return this.http.post<IdentificationResponse>(url , identificationRequest, Helper.buildHeaders());
-    return this.http.post(url, identificationRequest, Helper.buildHeaders())
-      .pipe(
-        map((this.extractData),
-        catchError(this.handleError))
-      );
+    const url = `${ this.baseUrl }/consultar_cliente_existe`;
+    return this.http.post<IdentificationResponse>(url , identificationRequest);
+    // return this.http.post(url, identificationRequest, Helper.buildHeaders())
+    //   .pipe(
+    //     map((this.extractData),
+    //     catchError(this.handleError))
+    //   );
   }
 
   campare_spoof(spoofRequest: SpoofRequest): Observable<SpoofResponse> {
     const url = `${ this.baseUrlSpoof }`;
-    // return this.http.post<SpoofResponse>(url, spoofRequest);
-    return this.http.post(url, spoofRequest, Helper.buildHeaders())
-      .pipe(
-        map((this.extractData),
-        catchError(this.handleError))
-      );
+    return this.http.post<SpoofResponse>(url, spoofRequest);
   }
 
   compare_faces(compareFaceRequst: CompareFaceRequst): Observable<CompareFaceResponse> {
     const url = `${ this.baseUrl }/compare_faces`;
-    // return this.http.post<CompareFaceResponse>(url, compareFaceRequst);
-    return this.http.post(url, compareFaceRequst, Helper.buildHeaders())
-      .pipe(
-        map((this.extractData),
-        catchError(this.handleError))
-      );
+    return this.http.post<CompareFaceResponse>(url, compareFaceRequst);
   }
 
   save_s3(saveS3Request: SaveS3Request): Observable<SaveS3Response> {
-    const url = 'https://skbilp645i.execute-api.us-east-1.amazonaws.com/s3-image';
-    // return this.http.post<SaveS3Response>(url, saveS3Request);
-    return this.http.post(url, saveS3Request, Helper.buildHeaders())
-      .pipe(
-        map((this.extractData),
-        catchError(this.handleError))
-      );
+    const url = `${ this.baseUrlSaveS3 }`;
+    return this.http.post<SaveS3Response>(url, saveS3Request);
   }
 
   save_bd(saveBDRequest: SaveBDRequest): Observable<SaveBDResponse> {
-    const url = 'https://fhi7bo984d.execute-api.us-east-1.amazonaws.com/items';
-    // return this.http.put<SaveBDResponse>(url, saveBDRequest);
-    return this.http.put(url, saveBDRequest, Helper.buildHeaders())
-      .pipe(
-        map((this.extractData),
-        catchError(this.handleError))
-      );
+    const url = `${ this.baseUrlSaveBd }`;
+    return this.http.put<SaveBDResponse>(url, saveBDRequest);
+    // return this.http.put(url, saveBDRequest, Helper.buildHeaders())
+    //   .pipe(
+    //     map((this.extractData),
+    //     catchError(this.handleError))
+    //   );
+  }
+
+  update_state(updateStateRequest: UpdateStateRequest): Observable<SaveBDResponse> {
+    const url = `${ this.baseUrlUpdateState }`;
+    return this.http.put<SaveBDResponse>(url, updateStateRequest);
   }
 
   private extractData(response: any) {

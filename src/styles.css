@@ -62,3 +62,10 @@ video {
 .card-footer {
   background-color: white;
 }
+
+.picture {
+  border-color: #128C7E;
+  border-radius: 10px;
+  width: 85%;
+  height: 85%;
+}
