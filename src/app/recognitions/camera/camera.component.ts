@@ -160,7 +160,7 @@ export class CameraComponent implements OnInit {
           console.log(compare);
           if (compare.faceComparison.match ){
             this.confidence = compare.faceComparison.confidence;
-            // this.saveS3();
+            this.saveS3();
           }
           else {
             this.updateState(false);
