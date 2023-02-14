@@ -227,6 +227,9 @@ export class CameraComponent implements OnInit {
   public updateState(completed: boolean) {
     console.log('updateState');
     const date = new Date();
+    let completedTrie = completed;
+    if ((this.triesValue + 1) == 3)
+      completedTrie = true;
     const request = new UpdateStateRequest(
       localStorage.getItem('PersonID')?.toString(),
       this.userModel.operationID,
@@ -236,7 +239,7 @@ export class CameraComponent implements OnInit {
       this.selfieBase64,
       this.confidence.toString(),
       (this.triesValue + 1).toString(),
-      completed
+      completedTrie
     );
     console.log(request);
     this.recongnitionsService.update_state(request)
