@@ -16,7 +16,8 @@ export class CheckFailedComponent implements OnInit {
   }
 
   initial(){
-    this.router.navigate(['/check_user']);
+    // this.router.navigate(['/check_user']);
+    window.location.href = "https://wa.me/14437852449?text=credigestion";
   }
 
 }

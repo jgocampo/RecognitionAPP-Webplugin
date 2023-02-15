@@ -228,8 +228,9 @@ export class CameraComponent implements OnInit {
     console.log('updateState');
     const date = new Date();
     let completedTrie = completed;
-    if ((this.triesValue + 1) == 3)
-      completedTrie = true;
+    if (!completed)
+      if ((this.triesValue + 1) == 3)
+        completedTrie = true;
     const request = new UpdateStateRequest(
       localStorage.getItem('PersonID')?.toString(),
       this.userModel.operationID,
