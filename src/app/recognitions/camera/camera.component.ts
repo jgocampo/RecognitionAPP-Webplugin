@@ -226,7 +226,7 @@ export class CameraComponent implements OnInit {
 
   public updateState(completed: boolean) {
     console.log('updateState');
-    const date = new Date();
+    const dateSend = this.formatDate(new Date());
     let completedTrie = completed;
     if (!completed)
       if ((this.triesValue + 1) == 3)
@@ -235,7 +235,7 @@ export class CameraComponent implements OnInit {
       localStorage.getItem('PersonID')?.toString(),
       this.userModel.operationID,
       this.userModel.codigoDactilar,
-      date.toISOString(),
+      dateSend.toString(),
       this.resultSpoof,
       this.selfieBase64,
       this.confidence.toString(),
@@ -262,6 +262,26 @@ export class CameraComponent implements OnInit {
           this.router.navigate(['/check_again']);
         }
       });
+  }
+
+  public formatDate(date: Date) {
+    return (
+      [
+        date.getFullYear(),
+        this.padTo2Digits(date.getMonth() + 1),
+        this.padTo2Digits(date.getDate()),
+      ].join('-') +
+      ' ' +
+      [
+        this.padTo2Digits(date.getHours()),
+        this.padTo2Digits(date.getMinutes()),
+        this.padTo2Digits(date.getSeconds()),
+      ].join(':')
+    );
+  }
+
+  public padTo2Digits(num: number) {
+    return num.toString().padStart(2, '0');
   }
 
 }
