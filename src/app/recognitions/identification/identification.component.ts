@@ -15,6 +15,7 @@ export class IdentificationComponent implements OnInit {
 
   show = false;
   autohide = true;
+  isPageReloaded = true;
 
   validedUser: IdentificationResponse | undefined;
 
@@ -28,7 +29,7 @@ export class IdentificationComponent implements OnInit {
     private recongnitionsService: RecongnitionsService,
     private router: Router,
     private fb: FormBuilder,
-    private modalService: NgbModal
+    private modalService: NgbModal,
   ) { }
 
   ngOnInit(): void {
@@ -68,15 +69,18 @@ export class IdentificationComponent implements OnInit {
             this.msgCliente = userChecked.msg;
             this.show = true;
           }
+          this.userForm.reset();
+          this.modalService.dismissAll();
         },
         error: (e) => {
           this.msgCliente = 'Lo sentimos al consultar el servicio, intentelo mas tarde.';
           this.show = true;
+          this.userForm.reset();
+          this.modalService.dismissAll();
         }
       });
 
-      this.userForm.reset();
-      this.modalService.dismissAll();
+      
   }
 
   fieldIsValid( field: string ) {

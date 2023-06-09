@@ -12,6 +12,9 @@ import { HomeComponent } from './home/home.component';
 import { CheckSuccessfulComponent } from './check-successful/check-successful.component';
 import { CheckFailedComponent } from './check-failed/check-failed.component';
 import { CheckAgainComponent } from './check-again/check-again.component';
+import {CheckFailedGafasComponent } from './check-failed-gafas/check-failed-gafas.component'
+import { CheckFailedMascComponent } from './check-failed-mascarilla/check-failed-masc.component'
+import { Loading } from './loading/loading.component';
 
 
 @NgModule({

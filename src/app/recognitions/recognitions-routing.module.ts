@@ -6,6 +6,10 @@ import { IdentificationComponent } from './identification/identification.compone
 import { CheckSuccessfulComponent } from './check-successful/check-successful.component';
 import { CheckFailedComponent } from './check-failed/check-failed.component';
 import { CheckAgainComponent } from './check-again/check-again.component';
+import {CheckFailedGafasComponent } from './check-failed-gafas/check-failed-gafas.component'
+import { CheckFailedMascComponent } from './check-failed-mascarilla/check-failed-masc.component'
+import { Loading } from './loading/loading.component';
+//import { WebPlugin } from './liveness-web-sdk/web-plugin'
 
 const routes: Routes = [
   {
@@ -17,6 +21,10 @@ const routes: Routes = [
       { path: 'check_successful', component: CheckSuccessfulComponent },
       { path: 'check_failed', component: CheckFailedComponent },
       { path: 'check_again', component: CheckAgainComponent },
+      { path: 'check_failed_gafas', component:  CheckFailedGafasComponent },
+      { path: 'check_failed_masc', component:  CheckFailedMascComponent },
+      { path: 'loading', component:  Loading },
+      //{ path: 'web_plugin', component:  WebPlugin },
       { path: '**', redirectTo: 'check_user'}
     ]
   }

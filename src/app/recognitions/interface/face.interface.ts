@@ -8,14 +8,16 @@ export class CompareFaceRequst {
 
 export interface CompareFaceResponse {
   faceComparison: FaceComparison;
-  landmarks:      Landmarks;
 }
 
 export interface FaceComparison {
   msg:        string;
   code:       number;
   match:      boolean;
+  gafas:      boolean;
+  mascarilla: boolean; 
   confidence: number;
+  landmarks:  Landmarks;
 }
 
 export interface Landmarks {

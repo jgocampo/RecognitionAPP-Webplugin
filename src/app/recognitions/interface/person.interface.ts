@@ -4,7 +4,7 @@ export class SaveBDRequest {
     public id?: string,
     public codigoDactilar?: string,
     public result?: string,
-    public selfie?: string,
+    public image_url?: string,
     public date?: string,
   ){}
 }
@@ -23,6 +23,7 @@ export class SaveS3Request {
 
 export interface SaveS3Response {
   message: string;
+  image_url: string;
 }
 
 export class SpoofRequest {
@@ -47,7 +48,7 @@ export class UpdateStateRequest {
     public codigoDactilar?: string,
     public date?:           string,
     public result?:         string,
-    public selfie?:         string,
+    public image_url?:      string,
     public confidence?:     string,
     public tries?:          string,
     public completed?:      boolean,
