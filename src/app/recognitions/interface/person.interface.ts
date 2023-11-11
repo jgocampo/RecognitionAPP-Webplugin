@@ -3,6 +3,7 @@ export class SaveBDRequest {
     public PersonID?: string,
     public id?: string,
     public codigoDactilar?: string,
+    public codigoEmpresa?: string,
     public result?: string,
     public image_url?: string,
     public date?: string,
@@ -45,6 +46,7 @@ export class UpdateStateRequest {
   constructor(
     public PersonID?:       string,
     public OperationID?:    string,
+    public codigoEmpresa?:    string,
     public codigoDactilar?: string,
     public date?:           string,
     public result?:         string,
@@ -54,3 +56,4 @@ export class UpdateStateRequest {
     public completed?:      boolean,
   ){}
 }
+

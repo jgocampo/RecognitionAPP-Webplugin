@@ -7,6 +7,7 @@ export class IdentificationRequest {
 export interface IdentificationResponse {
   esCliente:         boolean;
   fotoRegistroCivil: string;
+  codigoEmpresa:     string;
   error:             boolean;
   statusCode:        number;
   msg:               string;

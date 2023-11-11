@@ -6,11 +6,14 @@ import { Router } from '@angular/router';
 
 import { WebcamImage, WebcamInitError, WebcamUtil } from 'ngx-webcam';
 import { RecongnitionsService } from '../services/recongnitions.service';
-import { CompareFaceRequst, FaceComparison } from '../interface/face.interface';
 import { SaveBDRequest, SaveS3Request, UpdateStateRequest } from '../interface/person.interface';
 import { IdentificationResponse } from '../interface/identification.interface';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+
 
 declare var OzLiveness: any;
+
+
 
 @Component({
   selector: 'app-camera',
@@ -57,6 +60,9 @@ export class CameraComponent implements OnInit {
   liveness_media: string = '';
   liveness_image_url: string = '';
   liveness_image_base64: string = '';
+  folder_id: string = '';
+  analyse_id: string = '';
+  accessToken: string = '';
 
   picture: string = '';
   webCamView:  boolean = true;
@@ -65,10 +71,12 @@ export class CameraComponent implements OnInit {
   constructor( private recongnitionsService: RecongnitionsService,
     private router: Router,
     private modalService: NgbModal,
-    private ngZone: NgZone
+    private ngZone: NgZone,
+    private http: HttpClient
   ) { }
 
   ngOnInit() {
+    this.getToken();
     this.userModel = JSON.parse(localStorage.getItem('UserInfo')!);
     this.triesValue = Number(this.userModel.intentos);
     WebcamUtil.getAvailableVideoInputs()
@@ -76,6 +84,32 @@ export class CameraComponent implements OnInit {
         this.multipleWebcamsAvailable = mediaDevices && mediaDevices.length > 1;
       });
   }
+
+  public getToken() {
+    const apiUrl = 'https://api2-asia.ozforensics.com/api/authorize/auth';
+    const body = {
+      credentials: {
+        email: 'ricardo.macias.y@gmail.com',
+        password: '1s8zTugnxZdN'
+      }
+    };
+  
+    this.http.post(apiUrl, body).subscribe(
+      (response: any) => {
+        this.accessToken = response.access_token;
+        console.log('Token de acceso obtenido:');
+      },
+      error => {
+        console.error('Error al obtener el token de acceso:', error);
+        this.router.navigate(['/check_again']);
+        
+
+
+      }
+    );
+  }  
+
+  
 
   public initial() {
     OzLiveness.open({
@@ -92,7 +126,20 @@ export class CameraComponent implements OnInit {
         //console.log(result.analyses.quality.result_json.source_media);
         this.livenessResult = result.analyses.quality.resolution;
         this.liveness_media = result.analyses.quality.result_json.source_media;
-  
+        //console.log(result.analyses.quality.result_json.folder_id);
+        this.folder_id = result.analyses.quality.result_json.folder_id;
+        const apiUrl_media = `https://api2-asia.ozforensics.com/api/folders/${this.folder_id}/media/`;
+        const apiUrl_analyses = `https://api2-asia.ozforensics.com/api/folders/${this.folder_id}/analyses/`;
+
+        const headers = {
+          'X-Forensic-Access-Token': this.accessToken
+        };
+        const body = {
+          analyses: [
+            { type: 'biometry' }
+          ]
+        };
+
         if (Array.isArray(this.liveness_media) && this.liveness_media.length > 0) {
           const image_array = this.liveness_media[0].images;
           if (Array.isArray(image_array) && image_array.length > 1) {
@@ -107,14 +154,6 @@ export class CameraComponent implements OnInit {
                   if (typeof base64data === 'string') {
                     const base64ImageData = base64data.substring(base64data.indexOf(',') + 1);
                     this.liveness_image_base64 = base64ImageData;
-                    if(this.livenessResult === "success"){
-                      console.log("Spoof superado. Comenzando comparacion");
-                      this.compareFace(base64ImageData);
-                    }else{
-                      console.log("Spoof detectado");
-                      this.updateState(false);
-                    }
-                    //console.log(this.liveness_image_base64);
                   } else {
                     console.log('Error: los datos de la imagen no están en el formato esperado');
                   }
@@ -123,6 +162,7 @@ export class CameraComponent implements OnInit {
               })
               .catch(error => {
                 console.log('Error al obtener la imagen:', error);
+                this.router.navigate(['/check_again']);
               });
           } else {
             console.log('Error: la propiedad images no existe o no tiene suficientes elementos');
@@ -130,6 +170,76 @@ export class CameraComponent implements OnInit {
         } else {
           console.log('Error: la propiedad source_media no es un arreglo o está vacía');
         }
+
+        
+        const base64ToBlob = (base64: string, type: string = 'image/jpeg'): Blob => {
+          const byteCharacters = atob(base64);
+          const byteArrays = [];
+        
+          for (let offset = 0; offset < byteCharacters.length; offset += 1024) {
+            const slice = byteCharacters.slice(offset, offset + 1024);
+            const byteNumbers = new Array(slice.length);
+        
+            for (let i = 0; i < slice.length; i++) {
+              byteNumbers[i] = slice.charCodeAt(i);
+            }
+        
+            const byteArray = new Uint8Array(byteNumbers);
+            byteArrays.push(byteArray);
+          }
+        
+          return new Blob(byteArrays, { type });
+        };
+        
+        const imageBlob = base64ToBlob(this.userModel.fotoRegistroCivil);
+
+        
+
+        if(this.livenessResult === "success"){
+          const formData = new FormData();
+          formData.append('media', imageBlob, 'imagen.jpeg');
+
+          // Envía la solicitud a la API utilizando HttpClient
+          this.http.post(apiUrl_media, formData, { headers }).subscribe(
+            (response: any) => { // Ajuste del tipo de parámetro a 'any'
+              if (Array.isArray(response) && response.length > 0) {
+                const mediaId = response[0].media_id;
+                console.log('media_id:', mediaId);
+                console.log('Imagen para comparación subida');
+                this.http.post(apiUrl_analyses, body, { headers }).subscribe(
+                  (response_analyses: any) => { // Ajuste del tipo de parámetro a 'any'
+                    if (Array.isArray(response_analyses) && response_analyses.length > 0) {
+                      this.analyse_id = response_analyses[0].analyse_id;
+                      console.log(this.analyse_id);
+                      console.log('Analisis biométrico iniciado')
+                      this.saveS3();
+                      
+                    } else {
+                      console.log('No se encontraron elementos en la respuesta.');
+                      this.router.navigate(['/check_again']);
+                    }
+                  },
+                  error => {
+                    console.error(error);
+                    this.router.navigate(['/check_again']);
+                  }
+                );
+              } else {
+                console.log('No se encontraron elementos en la respuesta.');
+                this.router.navigate(['/check_again']);
+              }
+            },
+            error => {
+              console.error(error);
+              this.router.navigate(['/check_again']);
+            }
+          );
+
+        }else{
+          console.log("Spoof detectado");
+          this.updateState(false);
+        }
+
         
         this.ngZone.run(() => {
           this.router.navigate(['/loading']);
@@ -145,43 +255,33 @@ export class CameraComponent implements OnInit {
   }
   
 
-  public compareFace(imgBase64: string){
-    console.log('compareFace');
-    this.liveness_image_base64 = imgBase64;
-    // Consumir servicio de comparar rosotros
-    const request = new CompareFaceRequst(
-      this.userModel.fotoRegistroCivil,
-      imgBase64
-    );
-    console.log(request);
-    this.recongnitionsService.compare_faces(request)
-      .subscribe({
-        next: (compare) => {
-          console.log(compare);
-          if (compare.faceComparison.match ){
-            if(compare.faceComparison.gafas ){
-              this.gafas = compare.faceComparison.gafas;
-              this.confidence = compare.faceComparison.confidence;
-              this.updateState(false);
-            } else if (compare.faceComparison.mascarilla){
-              this.mascarilla = compare.faceComparison.mascarilla;
-              this.confidence = compare.faceComparison.confidence;
-              this.updateState(false);
-            } else{
-              this.confidence = compare.faceComparison.confidence;
-              this.saveS3();
-              //this.compareSpoof(imgBase64);
-            } 
-          }
-          else {
-            this.updateState(false);
-          }
-        },
-        error: (e) => {
-          console.log(e);
+  public compareFace(){
+
+    const headers = {
+      'X-Forensic-Access-Token': this.accessToken
+    };
+
+    this.http.get(`https://api2-asia.ozforensics.com/api/analyses/${this.analyse_id}`, { headers }).subscribe(
+      (response_analyse_result: any) => { // Ajuste del tipo de parámetro a 'any'
+        console.log(response_analyse_result);
+        console.log(response_analyse_result.resolution);
+        console.log('Analisis biométrico terminado')
+                          
+        if(response_analyse_result.resolution === "SUCCESS"){
+          this.confidence = response_analyse_result.results_data.max_confidence;
+          this.updateState(true);
+        }else{
+          console.log('Falló prueba biométrica')
           this.updateState(false);
         }
-      });
+                          
+      },
+      error => {
+        console.error(error);
+        this.router.navigate(['/check_again']);
+      }
+    );
+    
   }
 
   public saveS3() {
@@ -198,7 +298,7 @@ export class CameraComponent implements OnInit {
           console.log(saveS3);
           if (saveS3.message == 'Image uploaded successfully' ){
             this.image_url = saveS3.image_url;
-            this.updateState(true);
+            this.compareFace();
           }
           else {
             this.updateState(false);
@@ -246,6 +346,7 @@ export class CameraComponent implements OnInit {
     const request = new UpdateStateRequest(
       localStorage.getItem('PersonID')?.toString(),
       this.userModel.operationID,
+      this.userModel.codigoEmpresa,
       this.userModel.codigoDactilar,
       dateSend.toString(),
       this.livenessResult,
@@ -261,13 +362,13 @@ export class CameraComponent implements OnInit {
           console.log(saveBD);
           this.modalService.dismissAll();
           if (completed) {
-            this.router.navigate(['/check_successful']);
+            this.ngZone.run(() => {
+              this.router.navigate(['/check_successful']);
+            });
           } else if ((this.triesValue + 1) >= 3) {
-            this.router.navigate(['/check_failed']);
-          } else if (this.gafas) {
-            this.router.navigate(['/check_failed_gafas']);
-          } else if (this.mascarilla) {
-            this.router.navigate(['/check_failed_masc']);
+            this.ngZone.run(() => {
+              this.router.navigate(['/check_failed']);
+            });
           } else {
             this.ngZone.run(() => {
               this.router.navigate(['/check_again']);

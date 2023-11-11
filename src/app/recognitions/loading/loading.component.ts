@@ -17,7 +17,7 @@ export class Loading implements OnInit {
 
   initial(){
     // this.router.navigate(['/check_user']);
-    window.location.href = "https://wa.me/14437852449";
+    window.location.href = "https://wa.me/593993321446";
   }
 
 }
